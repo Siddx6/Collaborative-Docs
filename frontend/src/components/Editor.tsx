@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import api from '../api/client';
 import { Document } from '../types';
-import { ArrowLeft, Users, Link as LinkIcon, Save } from 'lucide-react';
+import { ArrowLeft, Users, Link as LinkIcon, Save, LogIn } from 'lucide-react';
 import '../styles/Editor.css';
 
 const TOOLBAR_OPTIONS = [
@@ -34,6 +34,7 @@ export const Editor = () => {
   const [document, setDocument] = useState<Document | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [requiresAuth, setRequiresAuth] = useState(false);
   const quillRef = useRef<Quill | null>(null);
   const editorRef = useRef<HTMLDivElement>(null);
   const hasJoinedRef = useRef(false);
@@ -46,6 +47,7 @@ export const Editor = () => {
       try {
         const response = await api.get(`/documents/link/${shareableLink}`);
         setDocument(response.data.document);
+        setRequiresAuth(response.data.document.requiresAuth);
       } catch (error) {
         console.error('Failed to load document:', error);
         alert('Document not found');
@@ -64,10 +66,10 @@ export const Editor = () => {
     if (quillRef.current || !editorRef.current || !document) return;
 
     // Additional guard: Check if Quill already attached to this element
-  if (editorRef.current.classList.contains('ql-container')) {
-    console.log('Quill already initialized on this element, skipping...');
-    return;
-  }
+    if (editorRef.current.classList.contains('ql-container')) {
+      console.log('Quill already initialized on this element, skipping...');
+      return;
+    }
 
     console.log('Initializing Quill editor...');
 
@@ -76,7 +78,7 @@ export const Editor = () => {
       modules: {
         toolbar: TOOLBAR_OPTIONS,
       },
-      placeholder: 'Start typing...',
+      placeholder: requiresAuth ? 'Please log in to edit...' : 'Start typing...',
     });
 
     // Set initial content
@@ -84,18 +86,22 @@ export const Editor = () => {
       quill.setContents(document.content);
     }
 
-    // Enable and focus
-    quill.enable(true);
-    quillRef.current = quill;
+    // Enable/disable based on auth status
+    if (requiresAuth) {
+      quill.enable(false);
+    } else {
+      quill.enable(true);
+      // Focus after short delay
+      setTimeout(() => {
+        if (quillRef.current) {
+          quillRef.current.focus();
+          quillRef.current.setSelection(0, 0);
+          console.log('Editor ready and focused');
+        }
+      }, 300);
+    }
 
-    // Focus after short delay
-    setTimeout(() => {
-      if (quillRef.current) {
-        quillRef.current.focus();
-        quillRef.current.setSelection(0, 0);
-        console.log('Editor ready and focused');
-      }
-    }, 300);
+    quillRef.current = quill;
 
     // Cleanup function
     return () => {
@@ -104,11 +110,11 @@ export const Editor = () => {
         quillRef.current = null;
       }
     };
-  }, [document]); // Only run when document changes
+  }, [document, requiresAuth]);
 
-  // Join document room
+  // Join document room (only if authenticated)
   useEffect(() => {
-    if (!document || !token || hasJoinedRef.current) return;
+    if (!document || !token || hasJoinedRef.current || requiresAuth) return;
 
     console.log('Joining document:', document.id);
     joinDocument(document.id, token);
@@ -119,11 +125,11 @@ export const Editor = () => {
       leaveDocument();
       hasJoinedRef.current = false;
     };
-  }, [document?.id, token]);
+  }, [document?.id, token, requiresAuth, joinDocument, leaveDocument]);
 
-  // Handle local changes
+  // Handle local changes (only if authenticated)
   useEffect(() => {
-    if (!quillRef.current) return;
+    if (!quillRef.current || requiresAuth) return;
 
     const quill = quillRef.current;
 
@@ -137,20 +143,22 @@ export const Editor = () => {
     return () => {
       quill.off('text-change', handleChange);
     };
-  }, [sendChanges]);
+  }, [sendChanges, requiresAuth]);
 
-  // Handle remote changes
+  // Handle remote changes (only if authenticated)
   useEffect(() => {
+    if (requiresAuth) return;
+
     const handleRemoteChange = (delta: any, userId: string) => {
       if (!quillRef.current || userId === user?.id) return;
       quillRef.current.setContents(delta, 'silent');
     };
 
     onDocumentChange(handleRemoteChange);
-  }, [onDocumentChange, user?.id]);
+  }, [onDocumentChange, user?.id, requiresAuth]);
 
   const handleSave = async () => {
-    if (!quillRef.current || !document) return;
+    if (!quillRef.current || !document || requiresAuth) return;
 
     setSaving(true);
     try {
@@ -172,6 +180,12 @@ export const Editor = () => {
     alert('Link copied to clipboard!');
   };
 
+  const handleLogin = () => {
+    // Store the current URL to redirect back after login
+    localStorage.setItem('redirectAfterLogin', window.location.pathname);
+    navigate('/login');
+  };
+
   if (loading) {
     return <div className="loading-screen">Loading document...</div>;
   }
@@ -191,25 +205,41 @@ export const Editor = () => {
         </div>
 
         <div className="header-center">
-          <div className={`connection-status ${connected ? 'connected' : 'disconnected'}`}>
-            <div className="status-dot" />
-            {connected ? 'Connected' : 'Disconnected'}
-          </div>
+          {requiresAuth ? (
+            <div className="auth-banner">
+              <LogIn size={18} />
+              <span>Viewing only - Log in to edit</span>
+            </div>
+          ) : (
+            <div className={`connection-status ${connected ? 'connected' : 'disconnected'}`}>
+              <div className="status-dot" />
+              {connected ? 'Connected' : 'Disconnected'}
+            </div>
+          )}
         </div>
 
         <div className="header-right">
-          <div className="active-users">
-            <Users size={18} />
-            <span>{activeUsers.length} online</span>
-          </div>
-          <button onClick={copyLink} className="btn-secondary" title="Copy shareable link">
-            <LinkIcon size={18} />
-            Share
-          </button>
-          <button onClick={handleSave} disabled={saving} className="btn-primary">
-            <Save size={18} />
-            {saving ? 'Saving...' : 'Save'}
-          </button>
+          {requiresAuth ? (
+            <button onClick={handleLogin} className="btn-primary">
+              <LogIn size={18} />
+              Log In to Edit
+            </button>
+          ) : (
+            <>
+              <div className="active-users">
+                <Users size={18} />
+                <span>{activeUsers.length} online</span>
+              </div>
+              <button onClick={copyLink} className="btn-secondary" title="Copy shareable link">
+                <LinkIcon size={18} />
+                Share
+              </button>
+              <button onClick={handleSave} disabled={saving} className="btn-primary">
+                <Save size={18} />
+                {saving ? 'Saving...' : 'Save'}
+              </button>
+            </>
+          )}
         </div>
       </header>
 
@@ -217,7 +247,7 @@ export const Editor = () => {
         <div ref={editorRef} className="editor-target" />
       </div>
 
-      {activeUsers.length > 0 && (
+      {!requiresAuth && activeUsers.length > 0 && (
         <div className="collaborators-panel">
           <h3>Active Collaborators</h3>
           <ul className="collaborators-list">

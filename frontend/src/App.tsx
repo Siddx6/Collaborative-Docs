@@ -25,14 +25,8 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/document/:shareableLink"
-              element={
-                <ProtectedRoute>
-                  <Editor />
-                </ProtectedRoute>
-              }
-            />
+            {/* Allow public access to shared documents */}
+            <Route path="/document/:shareableLink" element={<Editor />} />
           </Routes>
         </BrowserRouter>
       </SocketProvider>

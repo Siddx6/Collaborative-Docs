@@ -70,11 +70,6 @@ export const getUserDocuments = async (req: AuthRequest, res: Response): Promise
 
 export const getDocumentByLink = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    if (!req.user) {
-      res.status(401).json({ error: 'Unauthorized' });
-      return;
-    }
-
     const { shareableLink } = req.params;
 
     const document = await Document.findOne({ shareableLink })
@@ -86,14 +81,20 @@ export const getDocumentByLink = async (req: AuthRequest, res: Response): Promis
       return;
     }
 
-    // Add user to collaborators if not already there and not the owner
-    const userId = new Types.ObjectId(req.user.userId);
-    const isOwner = document.owner._id.equals(userId);
-    const isCollaborator = document.collaborators.some((c: any) => c._id.equals(userId));
+    // Check if user is authenticated
+    let isOwner = false;
+    let isCollaborator = false;
+    
+    if (req.user) {
+      const userId = new Types.ObjectId(req.user.userId);
+      isOwner = document.owner._id.equals(userId);
+      isCollaborator = document.collaborators.some((c: any) => c._id.equals(userId));
 
-    if (!isOwner && !isCollaborator) {
-      document.collaborators.push(userId);
-      await document.save();
+      // Add user to collaborators if authenticated, not owner, and not already a collaborator
+      if (!isOwner && !isCollaborator) {
+        document.collaborators.push(userId);
+        await document.save();
+      }
     }
 
     res.status(200).json({
@@ -104,6 +105,7 @@ export const getDocumentByLink = async (req: AuthRequest, res: Response): Promis
         shareableLink: document.shareableLink,
         owner: document.owner,
         isOwner,
+        requiresAuth: !req.user, // Tell frontend if user needs to log in
         createdAt: document.createdAt,
         updatedAt: document.updatedAt,
       },
