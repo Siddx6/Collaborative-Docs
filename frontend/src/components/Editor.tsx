@@ -111,7 +111,7 @@ export const Editor = () => {
     };
   }, [document, requiresAuth]);
 
-  // Join document room (FIXED - only runs once per document)
+  // Join document room (only runs once per document)
   useEffect(() => {
     if (!document || !token || requiresAuth) {
       console.log('Skipping join: document=', !!document, 'token=', !!token, 'requiresAuth=', requiresAuth);
@@ -126,32 +126,61 @@ export const Editor = () => {
       console.log('Leaving document');
       leaveDocument();
     };
-  }, [document?.id, token, requiresAuth]); // Only depend on document.id, token, and requiresAuth - NOT on the functions
+  }, [document?.id, token, requiresAuth]);
 
-  // Handle local changes (FIXED - stable dependency)
+  // Handle local changes - WITH DEBUG LOGGING
   useEffect(() => {
-    if (!quillRef.current || requiresAuth) return;
+    if (!quillRef.current || requiresAuth) {
+      console.log('❌ Skipping text-change handler: quill=', !!quillRef.current, 'requiresAuth=', requiresAuth);
+      return;
+    }
 
     const quill = quillRef.current;
+    console.log('✅ Setting up text-change handler');
 
     const handleChange = (_delta: any, _oldDelta: any, source: string) => {
-      if (source !== 'user') return;
-      sendChanges(quill.getContents());
+      console.log('📝 Text changed! Source:', source);
+      if (source !== 'user') {
+        console.log('⏭️ Skipping non-user change');
+        return;
+      }
+      
+      const contents = quill.getContents();
+      console.log('📤 Sending changes to socket:', contents);
+      sendChanges(contents);
     };
 
     quill.on('text-change', handleChange);
 
     return () => {
+      console.log('🧹 Cleaning up text-change handler');
       quill.off('text-change', handleChange);
     };
   }, [requiresAuth, sendChanges]);
 
-  // Handle remote changes (FIXED - set up once)
+  // Handle remote changes - WITH DEBUG LOGGING
   useEffect(() => {
-    if (requiresAuth) return;
+    if (requiresAuth) {
+      console.log('❌ Skipping document-change handler: requiresAuth=true');
+      return;
+    }
+
+    console.log('✅ Setting up document-change handler for user:', user?.id);
 
     const handleRemoteChange = (delta: any, userId: string) => {
-      if (!quillRef.current || userId === user?.id) return;
+      console.log('📥 RECEIVED CHANGE from:', userId, 'Current user:', user?.id);
+      
+      if (!quillRef.current) {
+        console.log('❌ No quill ref, cannot apply change');
+        return;
+      }
+      
+      if (userId === user?.id) {
+        console.log('⏭️ Skipping own change');
+        return;
+      }
+      
+      console.log('✅ Applying remote change to editor');
       quillRef.current.setContents(delta, 'silent');
     };
 
