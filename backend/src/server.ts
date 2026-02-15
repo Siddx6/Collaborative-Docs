@@ -17,13 +17,37 @@ const httpServer = createServer(app);
 // Initialize Socket.io
 const io = initializeSocket(httpServer);
 
-// Middleware
+// CORS Configuration - Fixed to allow all Vercel deployments
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, Postman, or curl)
+      if (!origin) return callback(null, true);
+      
+      // Allow localhost for development
+      if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+        return callback(null, true);
+      }
+      
+      // Allow all Vercel deployments (both production and preview URLs)
+      if (origin.includes('vercel.app')) {
+        return callback(null, true);
+      }
+      
+      // Allow specific production URL if set in env
+      if (process.env.CLIENT_URL && origin === process.env.CLIENT_URL) {
+        return callback(null, true);
+      }
+      
+      // If none of the above, reject
+      callback(new Error('Not allowed by CORS'));
+    },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -53,6 +77,7 @@ const startServer = async () => {
       console.log(`\n🚀 Server running on port ${PORT}`);
       console.log(`📡 Socket.io initialized`);
       console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`🔓 CORS: Allowing all Vercel deployments and localhost`);
       console.log(`\n✨ Ready to accept connections!\n`);
     });
   } catch (error) {
