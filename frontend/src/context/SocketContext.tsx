@@ -14,8 +14,6 @@ interface SocketContextType {
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
-
 export const SocketProvider = ({ children }: { children: ReactNode }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [connected, setConnected] = useState(false);
@@ -24,6 +22,11 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
   const currentDocumentIdRef = useRef<string | null>(null); // Track current document to prevent duplicate joins
 
   useEffect(() => {
+    // Move SOCKET_URL inside the useEffect to avoid import.meta error
+    const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    
+    console.log('🔌 Initializing socket connection to:', SOCKET_URL);
+    
     // Create socket connection once
     const newSocket = io(SOCKET_URL, {
       autoConnect: false,
