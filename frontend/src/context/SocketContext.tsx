@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode, useRef } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useRef, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { ActiveUser } from '../types';
 
@@ -21,6 +21,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
   const [connected, setConnected] = useState(false);
   const [activeUsers, setActiveUsers] = useState<ActiveUser[]>([]);
   const documentChangeCallbackRef = useRef<((delta: any, userId: string) => void) | null>(null);
+  const currentDocumentIdRef = useRef<string | null>(null); // Track current document to prevent duplicate joins
 
   useEffect(() => {
     // Create socket connection once
@@ -29,6 +30,8 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionAttempts: 5,
+      transports: ['websocket', 'polling'], // Add fallback transports
+      withCredentials: true, // Important for CORS
     });
 
     newSocket.on('connect', () => {
@@ -77,29 +80,54 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
 
     // Cleanup on unmount
     return () => {
+      console.log('🔌 Cleaning up socket connection');
       newSocket.close();
     };
   }, []); // Empty dependency array - only run once!
 
-  const joinDocument = (documentId: string, token: string) => {
-    if (socket && !socket.connected) {
+  // Use useCallback to create stable function references
+  const joinDocument = useCallback((documentId: string, token: string) => {
+    if (!socket) {
+      console.warn('⚠️ Socket not initialized');
+      return;
+    }
+
+    // Prevent joining the same document twice
+    if (currentDocumentIdRef.current === documentId) {
+      console.log('ℹ️ Already in document:', documentId);
+      return;
+    }
+
+    if (!socket.connected) {
+      console.log('🔌 Connecting socket...');
       socket.connect();
     }
-    socket?.emit('join-document', { documentId, token });
-  };
 
-  const leaveDocument = () => {
-    socket?.emit('leave-document');
+    console.log('📄 Joining document:', documentId);
+    currentDocumentIdRef.current = documentId;
+    socket.emit('join-document', { documentId, token });
+  }, [socket]);
+
+  const leaveDocument = useCallback(() => {
+    if (!socket) return;
+
+    console.log('🚪 Leaving document:', currentDocumentIdRef.current);
+    socket.emit('leave-document');
+    currentDocumentIdRef.current = null;
     setActiveUsers([]);
-  };
+  }, [socket]);
 
-  const sendChanges = (delta: any) => {
-    socket?.emit('send-changes', delta);
-  };
+  const sendChanges = useCallback((delta: any) => {
+    if (!socket || !socket.connected) {
+      console.warn('⚠️ Socket not connected, cannot send changes');
+      return;
+    }
+    socket.emit('send-changes', delta);
+  }, [socket]);
 
-  const onDocumentChange = (callback: (delta: any, userId: string) => void) => {
+  const onDocumentChange = useCallback((callback: (delta: any, userId: string) => void) => {
     documentChangeCallbackRef.current = callback;
-  };
+  }, []);
 
   return (
     <SocketContext.Provider

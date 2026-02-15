@@ -37,7 +37,6 @@ export const Editor = () => {
   const [requiresAuth, setRequiresAuth] = useState(false);
   const quillRef = useRef<Quill | null>(null);
   const editorRef = useRef<HTMLDivElement>(null);
-  const hasJoinedRef = useRef(false);
 
   // Load document
   useEffect(() => {
@@ -112,22 +111,24 @@ export const Editor = () => {
     };
   }, [document, requiresAuth]);
 
-  // Join document room (only if authenticated)
+  // Join document room (FIXED - only runs once per document)
   useEffect(() => {
-    if (!document || !token || hasJoinedRef.current || requiresAuth) return;
+    if (!document || !token || requiresAuth) {
+      console.log('Skipping join: document=', !!document, 'token=', !!token, 'requiresAuth=', requiresAuth);
+      return;
+    }
 
     console.log('Joining document:', document.id);
     joinDocument(document.id, token);
-    hasJoinedRef.current = true;
 
+    // Cleanup: leave document when component unmounts or document changes
     return () => {
       console.log('Leaving document');
       leaveDocument();
-      hasJoinedRef.current = false;
     };
-  }, [document?.id, token, requiresAuth, joinDocument, leaveDocument]);
+  }, [document?.id, token, requiresAuth]); // Only depend on document.id, token, and requiresAuth - NOT on the functions
 
-  // Handle local changes (only if authenticated)
+  // Handle local changes (FIXED - stable dependency)
   useEffect(() => {
     if (!quillRef.current || requiresAuth) return;
 
@@ -143,9 +144,9 @@ export const Editor = () => {
     return () => {
       quill.off('text-change', handleChange);
     };
-  }, [sendChanges, requiresAuth]);
+  }, [requiresAuth, sendChanges]);
 
-  // Handle remote changes (only if authenticated)
+  // Handle remote changes (FIXED - set up once)
   useEffect(() => {
     if (requiresAuth) return;
 
@@ -155,7 +156,7 @@ export const Editor = () => {
     };
 
     onDocumentChange(handleRemoteChange);
-  }, [onDocumentChange, user?.id, requiresAuth]);
+  }, [requiresAuth, user?.id, onDocumentChange]);
 
   const handleSave = async () => {
     if (!quillRef.current || !document || requiresAuth) return;
