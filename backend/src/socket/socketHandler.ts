@@ -23,10 +23,35 @@ export const initializeSocket = (httpServer: HTTPServer): SocketIOServer => {
     SocketData
   >(httpServer, {
     cors: {
-      origin: process.env.CLIENT_URL || 'http://localhost:5173',
+      origin: (origin, callback) => {
+        // Allow requests with no origin (mobile apps, Postman, etc.)
+        if (!origin) return callback(null, true);
+        
+        // Allow localhost for development
+        if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+          return callback(null, true);
+        }
+        
+        // Allow all Vercel deployments (both production and preview URLs)
+        if (origin.includes('vercel.app')) {
+          return callback(null, true);
+        }
+        
+        // Allow specific production URL if set in env
+        if (process.env.CLIENT_URL && origin === process.env.CLIENT_URL) {
+          return callback(null, true);
+        }
+        
+        // If none of the above, reject
+        callback(new Error('Not allowed by CORS'));
+      },
       methods: ['GET', 'POST'],
       credentials: true,
     },
+    transports: ['websocket', 'polling'], // Allow both transports for better reliability
+    pingTimeout: 60000, // Increase timeout to 60 seconds
+    pingInterval: 25000, // Send ping every 25 seconds
+    connectTimeout: 45000, // Connection timeout
   });
 
   io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>) => {
@@ -127,11 +152,23 @@ export const initializeSocket = (httpServer: HTTPServer): SocketIOServer => {
     });
 
     // Handle disconnect
-    socket.on('disconnect', () => {
-      console.log(`🔌 Client disconnected: ${socket.id}`);
+    socket.on('disconnect', (reason) => {
+      console.log(`🔌 Client disconnected: ${socket.id}, reason: ${reason}`);
       handleUserLeave(socket);
     });
+
+    // Handle connection errors
+    socket.on('error', (error) => {
+      console.error(`❌ Socket error for ${socket.id}:`, error);
+    });
   });
+
+  // Handle io-level errors
+  io.engine.on('connection_error', (err) => {
+    console.error('❌ Connection error:', err);
+  });
+
+  console.log('✅ Socket.IO initialized with CORS for all Vercel deployments');
 
   return io;
 };
