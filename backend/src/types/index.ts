@@ -24,12 +24,15 @@ export interface IDocument extends Document {
   updatedAt: Date;
 }
 
-// Extended Request with user
+// Extended Request with user - explicitly include Request properties
 export interface AuthRequest extends Request {
   user?: {
     userId: string;
     email: string;
   };
+  body: any;
+  params: any;
+  headers: any;
 }
 
 // Socket user data
