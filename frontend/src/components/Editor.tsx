@@ -37,6 +37,19 @@ export const Editor = () => {
   const [requiresAuth, setRequiresAuth] = useState(false);
   const quillRef = useRef<Quill | null>(null);
   const editorRef = useRef<HTMLDivElement>(null);
+  
+  // Use refs to store functions so they don't cause re-renders
+  const sendChangesRef = useRef(sendChanges);
+  const onDocumentChangeRef = useRef(onDocumentChange);
+  
+  // Update refs when functions change
+  useEffect(() => {
+    sendChangesRef.current = sendChanges;
+  }, [sendChanges]);
+  
+  useEffect(() => {
+    onDocumentChangeRef.current = onDocumentChange;
+  }, [onDocumentChange]);
 
   // Load document
   useEffect(() => {
@@ -59,12 +72,10 @@ export const Editor = () => {
     loadDocument();
   }, [shareableLink, navigate]);
 
-  // Initialize Quill - with strict guard
+  // Initialize Quill
   useEffect(() => {
-    // Guard: Don't init if already exists or no container or no document
     if (quillRef.current || !editorRef.current || !document) return;
 
-    // Additional guard: Check if Quill already attached to this element
     if (editorRef.current.classList.contains('ql-container')) {
       console.log('Quill already initialized on this element, skipping...');
       return;
@@ -80,17 +91,14 @@ export const Editor = () => {
       placeholder: requiresAuth ? 'Please log in to edit...' : 'Start typing...',
     });
 
-    // Set initial content
     if (document.content && document.content.ops) {
       quill.setContents(document.content);
     }
 
-    // Enable/disable based on auth status
     if (requiresAuth) {
       quill.enable(false);
     } else {
       quill.enable(true);
-      // Focus after short delay
       setTimeout(() => {
         if (quillRef.current) {
           quillRef.current.focus();
@@ -102,7 +110,6 @@ export const Editor = () => {
 
     quillRef.current = quill;
 
-    // Cleanup function
     return () => {
       console.log('Cleaning up Quill editor');
       if (quillRef.current) {
@@ -111,7 +118,7 @@ export const Editor = () => {
     };
   }, [document, requiresAuth]);
 
-  // Join document room (only runs once per document)
+  // Join document room
   useEffect(() => {
     if (!document || !token || requiresAuth) {
       console.log('Skipping join: document=', !!document, 'token=', !!token, 'requiresAuth=', requiresAuth);
@@ -121,17 +128,16 @@ export const Editor = () => {
     console.log('Joining document:', document.id);
     joinDocument(document.id, token);
 
-    // Cleanup: leave document when component unmounts or document changes
     return () => {
       console.log('Leaving document');
       leaveDocument();
     };
   }, [document?.id, token, requiresAuth]);
 
-  // Handle local changes - WITH DEBUG LOGGING
+  // Handle local changes - FIXED: No dependencies that change
   useEffect(() => {
     if (!quillRef.current || requiresAuth) {
-      console.log('❌ Skipping text-change handler: quill=', !!quillRef.current, 'requiresAuth=', requiresAuth);
+      console.log('❌ Cannot setup text-change: quill=', !!quillRef.current, 'requiresAuth=', requiresAuth);
       return;
     }
 
@@ -146,19 +152,19 @@ export const Editor = () => {
       }
       
       const contents = quill.getContents();
-      console.log('📤 Sending changes to socket:', contents);
-      sendChanges(contents);
+      console.log('📤 Sending changes via socket');
+      sendChangesRef.current(contents); // Use ref instead of direct function
     };
 
     quill.on('text-change', handleChange);
 
     return () => {
-      console.log('🧹 Cleaning up text-change handler');
+      console.log('🧹 Removing text-change handler');
       quill.off('text-change', handleChange);
     };
-  }, [requiresAuth, sendChanges]);
+  }, [requiresAuth]); // Only depend on requiresAuth, nothing else!
 
-  // Handle remote changes - WITH DEBUG LOGGING
+  // Handle remote changes - FIXED: Setup once
   useEffect(() => {
     if (requiresAuth) {
       console.log('❌ Skipping document-change handler: requiresAuth=true');
@@ -168,10 +174,10 @@ export const Editor = () => {
     console.log('✅ Setting up document-change handler for user:', user?.id);
 
     const handleRemoteChange = (delta: any, userId: string) => {
-      console.log('📥 RECEIVED CHANGE from:', userId, 'Current user:', user?.id);
+      console.log('📥 RECEIVED CHANGE from:', userId);
       
       if (!quillRef.current) {
-        console.log('❌ No quill ref, cannot apply change');
+        console.log('❌ No quill ref');
         return;
       }
       
@@ -180,12 +186,12 @@ export const Editor = () => {
         return;
       }
       
-      console.log('✅ Applying remote change to editor');
+      console.log('✅ Applying change to editor');
       quillRef.current.setContents(delta, 'silent');
     };
 
-    onDocumentChange(handleRemoteChange);
-  }, [requiresAuth, user?.id, onDocumentChange]);
+    onDocumentChangeRef.current(handleRemoteChange); // Use ref
+  }, [requiresAuth, user?.id]); // Don't include onDocumentChange
 
   const handleSave = async () => {
     if (!quillRef.current || !document || requiresAuth) return;
@@ -211,7 +217,6 @@ export const Editor = () => {
   };
 
   const handleLogin = () => {
-    // Store the current URL to redirect back after login
     localStorage.setItem('redirectAfterLogin', window.location.pathname);
     navigate('/login');
   };
