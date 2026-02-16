@@ -54,7 +54,7 @@ Backend API: https://collaborative-docs-6yyb.onrender.com
 ### Installation
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/collaborative-docs.git
+git clone git clone https://github.com/Siddx6/Collaborative-Docs.git
 cd collaborative-docs
 
 # Backend setup
@@ -126,6 +126,7 @@ Contributions are welcome! This is a learning/portfolio project, so feel free to
 ---
 
 ⭐ Star this repo if you found it helpful!
+
 
 
 
