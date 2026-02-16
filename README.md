@@ -8,6 +8,12 @@ A modern, real-time collaborative document editor built with React, Node.js, Soc
 ![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=flat&logo=mongodb&logoColor=white)
 ![Socket.io](https://img.shields.io/badge/Socket.io-black?style=flat&logo=socket.io&badgeColor=010101)
 
+🚀 Live Demo
+
+Frontend: https://collaborative-docs-two.vercel.app
+
+Backend API: https://collaborative-docs-6yyb.onrender.com
+
 ## ✨ Features
 
 - **🔄 Real-time Collaboration** - Multiple users can edit documents simultaneously
@@ -100,4 +106,3 @@ Contributions are welcome! This is a learning/portfolio project, so feel free to
 
 ⭐ Star this repo if you found it helpful!
 
-Built with ❤️ by [Your Name](https://github.com/yourusername)
