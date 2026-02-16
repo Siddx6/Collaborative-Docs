@@ -14,6 +14,27 @@ Frontend: https://collaborative-docs-two.vercel.app
 
 Backend API: https://collaborative-docs-6yyb.onrender.com
 
+## 🎥 Application Demo
+
+![Real-Time Collaboration](Real-Time-Changes(GIF).gif)
+
+## 📸 Screenshots
+
+### 📝 Text Editor
+![Text Editor](Text-Editor.png)
+
+### 👥 Active Collaborators
+![Active Collaborators](Active-Collaborators.png)
+
+### 📊 Dashboard
+![Dashboard](Dashboard.png)
+
+### 🔄 Real-Time Changes
+![Real-Time Changes](Real-Time-Changes.png)
+
+### 🔐 Login Page
+![Login Page](login-page.png)
+
 ## ✨ Features
 
 - **🔄 Real-time Collaboration** - Multiple users can edit documents simultaneously
@@ -105,4 +126,5 @@ Contributions are welcome! This is a learning/portfolio project, so feel free to
 ---
 
 ⭐ Star this repo if you found it helpful!
+
 
