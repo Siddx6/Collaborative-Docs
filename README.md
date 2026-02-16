@@ -1,9 +1,6 @@
-📝 Real-Time Collaborative Document Editor
+# 📝 Real-Time Collaborative Docs
 
-A full-stack real-time collaborative document system where multiple authenticated users can edit the same document simultaneously with live synchronization and presence tracking.
-
-Built using React, TypeScript, Node.js, Socket.IO, and MongoDB.
-Deployed with Vercel (frontend) and Render (backend).
+A modern, real-time collaborative document editor built with React, Node.js, Socket.io, and MongoDB. Edit documents simultaneously with multiple users and see changes instantly.
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat&logo=typescript&logoColor=white)
 ![React](https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB)
@@ -17,142 +14,95 @@ Frontend: https://collaborative-docs-two.vercel.app
 
 Backend API: https://collaborative-docs-6yyb.onrender.com
 
-🧠 System Overview
+## ✨ Features
 
-This project implements a room-based real-time collaboration architecture:
+- **🔄 Real-time Collaboration** - Multiple users can edit documents simultaneously
+- **📝 Rich Text Editor** - Full formatting powered by Quill.js
+- **🔐 Secure Authentication** - JWT-based auth with bcrypt password hashing
+- **🔗 Shareable Links** - Generate unique links for each document
+- **👥 Active Users** - See who's currently editing
+- **💾 Auto-save** - Changes automatically persist to MongoDB
+- **📱 Responsive Design** - Works on desktop and mobile
 
-Users authenticate using JWT
+## 🚀 Quick Start
 
-Tokens are verified inside Socket.IO events
+### Prerequisites
+- Node.js 18+
+- MongoDB 6+
 
-Each document maps to a dedicated WebSocket room
-
-Edits are broadcast only to users in the same room
-
-Active users are tracked per document session
-
-Changes persist to MongoDB with auto-save logic
-
-The system supports concurrent multi-user editing and handles reconnections without crashing on refresh.
-
-✨ Core Features
-🔄 Real-Time Collaboration
-
-Multiple users edit the same document simultaneously
-
-Instant synchronization using WebSocket rooms
-
-Efficient change propagation scoped per document
-
-🔐 Secure Authentication
-
-JWT-based authentication
-
-bcrypt password hashing
-
-Protected REST endpoints
-
-Token validation inside socket events
-
-👥 Presence Tracking
-
-Displays active users in a document
-
-Join/leave events broadcast in real time
-
-🔗 Shareable Links
-
-Unique document links
-
-Login required before editing
-
-Owner-based access validation
-
-💾 Auto Save
-
-Changes persist to MongoDB
-
-Document state restored on refresh
-
-📝 Rich Text Editing
-
-Powered by Quill.js
-
-Supports formatting, lists, colors, images
-
-Uses Delta format for content structure
-
-🏗️ Architecture
-Frontend
-
-React + TypeScript
-
-Vite
-
-Socket.IO Client
-
-Quill.js
-
-React Router
-
-Backend
-
-Node.js + Express
-
-TypeScript
-
-Socket.IO
-
-MongoDB + Mongoose
-
-JWT Authentication
-
-Real-Time Flow
-
-User logs in → receives JWT
-
-User opens document → joins document-specific socket room
-
-Edits emit send-changes event
-
-Server broadcasts document-change to room members
-
-Changes are persisted to MongoDB
-
-Active users list updates dynamically
-
-📚 API Endpoints
-Method	Endpoint	Description
-POST	/api/auth/register	Register new user
-POST	/api/auth/login	Login user
-GET	/api/auth/me	Get current user
-POST	/api/documents	Create document
-GET	/api/documents	Get user documents
-GET	/api/documents/link/:link	Get document by link
-PUT	/api/documents/:id	Update document
-DELETE	/api/documents/:id	Delete document
-
-
-📦 Installation
-Prerequisites
-
-Node.js 18+
-
-MongoDB 6+
-
-Setup
+### Installation
+```bash
 # Clone repository
 git clone https://github.com/yourusername/collaborative-docs.git
 cd collaborative-docs
 
-Backend
+# Backend setup
 cd backend
 npm install
 cp .env.example .env
-# Add MongoDB URI and JWT secret
+# Edit .env with your MongoDB URI and JWT secret
 npm run dev
 
-Frontend
+# Frontend setup (new terminal)
 cd frontend
 npm install
 npm run dev
+```
+
+## 🏗️ Tech Stack
+
+**Frontend:**
+- React + TypeScript
+- Socket.io Client
+- Quill.js (Rich text editor)
+- React Router
+- Vite
+
+**Backend:**
+- Node.js + Express
+- TypeScript
+- Socket.io (WebSocket)
+- MongoDB + Mongoose
+- JWT Authentication
+
+## 🎯 Key Features Explained
+
+### Real-time Synchronization
+Documents sync instantly across all connected users using WebSocket rooms. Each document has its own room for efficient change propagation.
+
+### Document Management
+- Create and rename documents
+- Copy shareable links
+- Auto-generated unique IDs for each document
+- Owner-based access control
+
+### Rich Text Editing
+Full-featured editor with formatting, lists, colors, images, and more powered by Quill.js Delta format.
+
+## 📚 API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/register` | Register new user |
+| POST | `/api/auth/login` | Login user |
+| GET | `/api/auth/me` | Get current user |
+| POST | `/api/documents` | Create document |
+| GET | `/api/documents` | Get user's documents |
+| GET | `/api/documents/link/:link` | Get document by link |
+| PUT | `/api/documents/:id` | Update document |
+| DELETE | `/api/documents/:id` | Delete document |
+
+## 🤝 Contributing
+
+Contributions are welcome! This is a learning/portfolio project, so feel free to fork and experiment.
+
+## 🙏 Acknowledgments
+
+- [Quill.js](https://quilljs.com/) - Rich text editor
+- [Socket.io](https://socket.io/) - WebSocket library
+- Inspired by Google Docs and Notion
+
+---
+
+⭐ Star this repo if you found it helpful!
+
