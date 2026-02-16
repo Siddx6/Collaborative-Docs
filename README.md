@@ -99,5 +99,3 @@ Contributions are welcome! This is a learning/portfolio project, so feel free to
 ---
 
 ⭐ Star this repo if you found it helpful!
-
-Built with ❤️ by [Your Name](https://github.com/yourusername)
