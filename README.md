@@ -16,24 +16,24 @@ Backend API: https://collaborative-docs-6yyb.onrender.com
 
 ## 🎥 Application Demo
 
-![Real-Time Collaboration](Real-Time-Changes(GIF).gif)
+![Real-Time Collaboration](screenshots/Real-Time-Changes(GIF).gif)
 
 ## 📸 Screenshots
 
 ### 📝 Text Editor
-![Text Editor](Text-Editor.png)
+![Text Editor](screenshots/Text-Editor.png)
 
 ### 👥 Active Collaborators
-![Active Collaborators](Active-Collaborators.png)
+![Active Collaborators](screenshots/Active-Collaborators.png)
 
 ### 📊 Dashboard
-![Dashboard](Dashboard.png)
+![Dashboard](screenshots/Dashboard.png)
 
 ### 🔄 Real-Time Changes
-![Real-Time Changes](Real-Time-Changes.png)
+![Real-Time Changes](screenshots/Real-Time-Changes.png)
 
 ### 🔐 Login Page
-![Login Page](login-page.png)
+![Login Page](screenshots/login-page.png)
 
 ## ✨ Features
 
@@ -126,5 +126,6 @@ Contributions are welcome! This is a learning/portfolio project, so feel free to
 ---
 
 ⭐ Star this repo if you found it helpful!
+
 
 
