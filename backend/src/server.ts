@@ -14,6 +14,8 @@ dotenv.config();
 const app: Application = express();
 const httpServer = createServer(app);
 
+console.log(process.env.JWT_SECRET);
+
 // Initialize Socket.io
 const io = initializeSocket(httpServer);
 
