@@ -24,7 +24,7 @@ app.use(
       // Allow requests with no origin (like mobile apps, Postman, or curl)
       if (!origin) return callback(null, true);
       
-      // Allow localhost for development
+      
       if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
         return callback(null, true);
       }
