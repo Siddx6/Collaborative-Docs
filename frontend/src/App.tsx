@@ -34,4 +34,6 @@ function App() {
   );
 }
 
+const x: number = 5;
+
 export default App;
