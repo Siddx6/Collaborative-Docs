@@ -2,11 +2,11 @@ import express, { Application } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { createServer } from 'http';
-import { connectDB } from './config/database';
-import { initializeSocket } from './socket/socketHandler';
-import authRoutes from './routes/authRoutes';
-import documentRoutes from './routes/documentRoutes';
-import { errorHandler, notFound } from './middleware/errorHandler';
+import { connectDB } from './config/database.js';
+import { initializeSocket } from './socket/socketHandler.js';
+import authRoutes from './routes/authRoutes.js';
+import documentRoutes from './routes/documentRoutes.js';
+import { errorHandler, notFound } from './middleware/errorHandler.js';
 
 // Load environment variables
 dotenv.config();

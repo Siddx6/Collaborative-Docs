@@ -17,6 +17,7 @@ export default tseslint.config(
       "@typescript-eslint/ban-ts-comment": "warn",
       "@typescript-eslint/no-require-imports": "warn",
       "@typescript-eslint/only-throw-error": "off",
+      "preserve-caught-error": "off",
       "no-console": "warn",
     },
   }
