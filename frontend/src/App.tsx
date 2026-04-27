@@ -7,10 +7,7 @@ import { Dashboard } from './components/Dashboard';
 import { Editor } from './components/Editor';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import './styles/global.css';
-import * as Sentry from "@sentry/react";
 
-// Add this line inside the App component, at the top
-Sentry.captureMessage("Sentry test from production");
 
 function App() {
   return (
