@@ -9,6 +9,7 @@
     "lint": "eslint . --ext ts,tsx"
   },
   "dependencies": {
+    "@sentry/react": "^10.50.0",
     "axios": "^1.6.5",
     "lucide-react": "^0.303.0",
     "quill": "^1.3.7",

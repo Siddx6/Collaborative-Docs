@@ -1,3 +1,4 @@
+import "./instrument";
 import express, { Application } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -7,6 +8,7 @@ import { initializeSocket } from './socket/socketHandler.js';
 import authRoutes from './routes/authRoutes.js';
 import documentRoutes from './routes/documentRoutes.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
+import * as Sentry from "@sentry/node";
 
 // Load environment variables
 dotenv.config();
@@ -61,6 +63,9 @@ app.get('/health', (req, res) => {
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/documents', documentRoutes);
+
+// Sentry error handler (must be after routes and after app initialization)
+Sentry.setupExpressErrorHandler(app);
 
 // Error handling
 app.use(notFound);
